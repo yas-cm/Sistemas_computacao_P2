@@ -10,10 +10,11 @@
 // ✅ INCLUIR OS ALGORITMOS
 #include "../algorithms/cache_fifo.cpp"
 #include "../algorithms/cache_lru.cpp"
+#include "../algorithms/cache_mru.cpp"
 
 using namespace std;
 
-// GERENCIADOR PRINCIPAL (mesmo código)
+// GERENCIADOR PRINCIPAL
 class GerenciadorTextos {
 private:
     vector<string> caminhos_textos;
@@ -56,6 +57,20 @@ public:
             return "❌ Arquivo não encontrado!";
         }
         return "❌ Texto não encontrado!";
+    }
+
+    void mostrar_cache() {  // ✅ NOVO MÉTODO
+        if (algoritmo_cache) {
+            vector<int> ids_cache = algoritmo_cache->get_ids_cache();
+            cout << "🔍 CACHE ATUAL: [";
+            for (size_t i = 0; i < ids_cache.size(); i++) {
+                cout << ids_cache[i];
+                if (i < ids_cache.size() - 1) cout << ", ";
+            }
+            cout << "] (" << ids_cache.size() << "/10)" << endl;
+        } else {
+            cout << "❌ Nenhum algoritmo de cache selecionado!" << endl;
+        }
     }
 
     void abrir_texto(int id) {
@@ -113,6 +128,8 @@ public:
         
         if (cache_hit) cout << "🚀 Velocidade alta: cache!" << endl;
         else cout << "🐌 Velocidade baixa: disco" << endl;
+
+        mostrar_cache();  // ✅ MOSTRA CACHE APÓS CADA OPERAÇÃO
     }
 
     void executar_modo_simulacao() {
@@ -127,6 +144,7 @@ public:
             cout << "Algoritmo: " << algoritmo_cache->get_nome() << endl;
             cout << "Hits: " << hits << " | Misses: " << misses << endl;
             cout << "Taxa de acerto: " << (hits * 100.0 / max(1, hits + misses)) << "%" << endl;
+            mostrar_cache();  // ✅ MOSTRA CACHE NAS ESTATÍSTICAS
         }
     }
 };
@@ -141,7 +159,8 @@ int main() {
     cout << "\n🎯 Escolha o algoritmo:" << endl;
     cout << "1 - FIFO (First-In, First-Out)" << endl;
     cout << "2 - LRU (Least Recently Used)" << endl;
-    cout << "Digite 1 ou 2: ";
+    cout << "3 - MRU (Most Recently Used)" << endl;
+    cout << "Digite 1, 2 ou 3: ";
     
     int escolha;
     cin >> escolha;
@@ -153,6 +172,11 @@ int main() {
     }
     else if (escolha == 2) {
         CacheLRU* algoritmo = new CacheLRU();
+        gerenciador.set_algoritmo_cache(algoritmo);
+        cout << "✅ " << algoritmo->get_nome() << " carregado!" << endl;
+    }
+    else if (escolha == 3) {
+        CacheMRU* algoritmo = new CacheMRU();
         gerenciador.set_algoritmo_cache(algoritmo);
         cout << "✅ " << algoritmo->get_nome() << " carregado!" << endl;
     }

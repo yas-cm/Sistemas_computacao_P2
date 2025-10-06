@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <iostream>
 #include "../algorithms/algoritmo_cache.cpp"
 
 using namespace std;
@@ -54,6 +55,15 @@ public:
         cache.clear();
         hits = 0;
         misses = 0;
+    }
+
+    // ✅ NOVO MÉTODO - ESPIAR CACHE
+    vector<int> get_ids_cache() const override {
+        vector<int> ids;
+        for (const auto& item : cache) {
+            ids.push_back(item.first);
+        }
+        return ids;
     }
 };
 

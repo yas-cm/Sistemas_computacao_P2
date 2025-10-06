@@ -17,6 +17,7 @@ if %errorlevel% == 0 (
     echo   - core/ra2_main.cpp
     echo   - algorithms/cache_fifo.cpp  
     echo   - algorithms/cache_lru.cpp
+    echo   - algorithms/cache_mru.cpp
 )
 
 pause

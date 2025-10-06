@@ -1,5 +1,5 @@
-#ifndef CACHE_LRU_CPP
-#define CACHE_LRU_CPP
+#ifndef CACHE_MRU_CPP
+#define CACHE_MRU_CPP
 
 #include <vector>
 #include <list>
@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class CacheLRU : public AlgoritmoCache {
+class CacheMRU : public AlgoritmoCache {
 private:
     int capacidade;
     int hits;
@@ -18,7 +18,7 @@ private:
     unordered_map<int, list<pair<int, string>>::iterator> cache_map;
 
 public:
-    CacheLRU(int cap = 10) : capacidade(cap), hits(0), misses(0) {}
+    CacheMRU(int cap = 10) : capacidade(cap), hits(0), misses(0) {}
     
     string buscar_texto(int id) override {
         auto it = cache_map.find(id);
@@ -40,15 +40,15 @@ public:
         }
         
         if (cache_list.size() >= capacidade) {
-            int id_remover = cache_list.front().first;
-            cout << "🗑️  LRU: Removendo texto " << id_remover << " (menos recentemente usado)" << endl;
+            int id_remover = cache_list.back().first;
+            cout << "🗑️  MRU: Removendo texto " << id_remover << " (mais recentemente usado)" << endl;
             cache_map.erase(id_remover);
-            cache_list.pop_front();
+            cache_list.pop_back();
         }
         
         cache_list.push_back({id, conteudo});
         cache_map[id] = prev(cache_list.end());
-        cout << "💾 LRU: Texto " << id << " armazenado (" << cache_list.size() << "/" << capacidade << ")" << endl;
+        cout << "💾 MRU: Texto " << id << " armazenado (" << cache_list.size() << "/" << capacidade << ")" << endl;
     }
 
     pair<int, int> get_estatisticas() const override {
@@ -56,7 +56,7 @@ public:
     }
 
     string get_nome() const override {
-        return "LRU (Least Recently Used)";
+        return "MRU (Most Recently Used)";
     }
 
     void limpar_cache() override {
