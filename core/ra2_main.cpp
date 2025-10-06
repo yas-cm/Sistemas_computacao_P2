@@ -7,18 +7,85 @@
 
 using namespace std;
 
-// APENAS a interface - implementação fica com outros alunos
+// ============================================================================
+// INTERFACE PARA ALGORITMOS DE CACHE
+// ============================================================================
+
 class AlgoritmoCache {
 public:
     virtual ~AlgoritmoCache() = default;
-    virtual string buscar_texto(int id) = 0;           // Aluno B, C, D implementam
-    virtual void carregar_texto(int id, const string& conteudo) = 0;  // Aluno B, C, D implementam
-    virtual pair<int, int> get_estatisticas() const = 0;              // Aluno B, C, D implementam
-    virtual string get_nome() const = 0;                              // Aluno B, C, D implementam
-    virtual void limpar_cache() = 0;                                  // Aluno B, C, D implementam
+    virtual string buscar_texto(int id) = 0;
+    virtual void carregar_texto(int id, const string& conteudo) = 0;
+    virtual pair<int, int> get_estatisticas() const = 0;
+    virtual string get_nome() const = 0;
+    virtual void limpar_cache() = 0;
 };
 
-// Gerenciador principal - APENAS Aluno A
+// ============================================================================
+// ALUNO B - CACHE FIFO 
+// ============================================================================
+
+class CacheFIFO : public AlgoritmoCache {
+private:
+    vector<pair<int, string>> cache;
+    int capacidade;
+    int hits;
+    int misses;
+
+public:
+    CacheFIFO(int cap = 10) : capacidade(cap), hits(0), misses(0) {
+        cout << "🔄 Cache FIFO criado (capacidade: " << capacidade << " textos)" << endl;
+    }
+    
+    string buscar_texto(int id) override {
+        for (const auto& item : cache) {
+            if (item.first == id) {
+                hits++;
+                return item.second;
+            }
+        }
+        misses++;
+        return "";
+    }
+
+    void carregar_texto(int id, const string& conteudo) override {
+        // Verifica se já está no cache
+        for (const auto& item : cache) {
+            if (item.first == id) {
+                return;  // Já está, não faz nada
+            }
+        }
+        
+        // Se cache cheio, remove o primeiro (FIFO)
+        if (cache.size() >= capacidade) {
+            cout << "🗑️  FIFO: Removendo texto " << cache[0].first << " (mais antigo)" << endl;
+            cache.erase(cache.begin());
+        }
+        
+        // Adiciona novo texto no final
+        cache.push_back({id, conteudo});
+        cout << "💾 FIFO: Texto " << id << " armazenado (" << cache.size() << "/" << capacidade << ")" << endl;
+    }
+
+    pair<int, int> get_estatisticas() const override {
+        return {hits, misses};
+    }
+
+    string get_nome() const override {
+        return "FIFO (First-In, First-Out)";
+    }
+
+    void limpar_cache() override {
+        cache.clear();
+        hits = 0;
+        misses = 0;
+    }
+};
+
+// ============================================================================
+// ALUNO A - GERENCIADOR PRINCIPAL
+// ============================================================================
+
 class GerenciadorTextos {
 private:
     vector<string> caminhos_textos;
@@ -77,7 +144,7 @@ public:
         string conteudo;
         bool cache_hit = false;
 
-        // Interface com cache - implementação fica com outros alunos
+        // 1ª BUSCA: Tenta pegar do cache
         if (algoritmo_cache) {
             conteudo = algoritmo_cache->buscar_texto(id);
             if (!conteudo.empty()) {
@@ -90,68 +157,104 @@ public:
         if (!cache_hit) {
             misses++;
             cout << "⏳ [CACHE MISS] Carregando texto " << id << " do disco..." << endl;
-            conteudo = carregar_texto_disco(id);
             
-            // Interface com cache - implementação fica com outros alunos
+            // Carrega do disco (lento)
+            string conteudo_disco = carregar_texto_disco(id);
+            
+            // ARMAZENA NO CACHE antes de mostrar
             if (algoritmo_cache) {
-                algoritmo_cache->carregar_texto(id, conteudo);
+                algoritmo_cache->carregar_texto(id, conteudo_disco);
+                
+                // 2ª BUSCA: Pega do cache (agora está lá)
+                conteudo = algoritmo_cache->buscar_texto(id);
+                if (!conteudo.empty()) {
+                    cout << "💾 Texto armazenado no cache e recuperado com sucesso!" << endl;
+                }
+            } else {
+                conteudo = conteudo_disco;
             }
         }
         
-        // Mostrar texto (Aluno A)
-        cout << "📄 Texto " << id << " aberto:" << endl;
+        // MOSTRA TEXTO (agora sempre pode vir do cache)
+        cout << "📄 Texto " << id << ":" << endl;
         cout << "==========================================" << endl;
         
         // Mostra primeiras linhas
         size_t pos = 0;
         int linhas_mostradas = 0;
-        while (pos < conteudo.length() && linhas_mostradas < 5) {
+        while (pos < conteudo.length() && linhas_mostradas < 3) {
             size_t newline = conteudo.find('\n', pos);
             if (newline == string::npos) break;
             cout << conteudo.substr(pos, newline - pos) << endl;
             pos = newline + 1;
             linhas_mostradas++;
         }
-        if (linhas_mostradas == 5) cout << "... [conteúdo truncado]" << endl;
+        if (linhas_mostradas == 3 && pos < conteudo.length()) {
+            cout << "... [conteúdo truncado]" << endl;
+        }
         
         cout << "==========================================" << endl;
 
+        // MOSTRA TEMPO
         auto fim = chrono::steady_clock::now();
         auto duracao = chrono::duration_cast<chrono::milliseconds>(fim - inicio);
         cout << "⏰ Tempo total: " << duracao.count() << "ms" << endl;
+        
+        if (cache_hit) {
+            cout << "🚀 Velocidade alta: conteúdo veio do cache!" << endl;
+        } else {
+            cout << "🐌 Velocidade baixa: conteúdo veio do disco forense" << endl;
+        }
     }
 
     void executar_modo_simulacao() {
         cout << "\n🎮 MODO SIMULAÇÃO" << endl;
         cout << "================" << endl;
+        cout << "Este modo testará diferentes algoritmos de cache" << endl;
+        cout << "com usuários virtuais fazendo 200 solicitações cada." << endl;
         cout << "Aguardando implementação do Aluno D..." << endl;
-        // Aluno D implementa
+        
+        // Simulação básica para teste
+        cout << "⏳ Executando simulação básica..." << endl;
+        this_thread::sleep_for(chrono::seconds(2));
+        cout << "✅ Simulação concluída!" << endl;
+        cout << "📊 Em breve: relatórios comparativos entre algoritmos" << endl;
     }
 
     void mostrar_estatisticas() {
         if (algoritmo_cache) {
             auto stats = algoritmo_cache->get_estatisticas();
-            cout << "\n📊 ESTATÍSTICAS:" << endl;
+            cout << "\n📊 ESTATÍSTICAS DO SISTEMA:" << endl;
             cout << "Algoritmo: " << algoritmo_cache->get_nome() << endl;
             cout << "Hits: " << hits << " | Misses: " << misses << endl;
             cout << "Taxa de acerto: " << (hits * 100.0 / max(1, hits + misses)) << "%" << endl;
+            
+            // Estatísticas do algoritmo específico
+            auto algo_stats = algoritmo_cache->get_estatisticas();
+            cout << "Estatísticas do algoritmo:" << endl;
+            cout << "  Hits: " << algo_stats.first << " | Misses: " << algo_stats.second << endl;
         } else {
             cout << "❌ Nenhum algoritmo de cache configurado!" << endl;
         }
     }
 };
 
-// FUNÇÃO PRINCIPAL - Aluno A
+// ============================================================================
+// FUNÇÃO PRINCIPAL
+// ============================================================================
+
 int main() {
     cout << "📚 SISTEMA DE LEITURA - TEXTO É VIDA" << endl;
+    cout << "====================================" << endl;
+    cout << "Cache: 10 textos | Disco: 100 textos" << endl;
     cout << "====================================" << endl;
     
     GerenciadorTextos gerenciador;
     
-    // TODO: Aluno B, C, D conectam seus algoritmos aqui
-    // gerenciador.set_algoritmo_cache(&algoritmo_fifo); // Aluno B
-    // gerenciador.set_algoritmo_cache(&algoritmo_lru);  // Aluno C  
-    // gerenciador.set_algoritmo_cache(&algoritmo_lfu);  // Aluno D
+    // ✅ ALUNO B - FIFO INTEGRADO
+    CacheFIFO algoritmo_fifo;
+    gerenciador.set_algoritmo_cache(&algoritmo_fifo);
+    cout << "✅ Algoritmo: " << algoritmo_fifo.get_nome() << endl;
 
     int opcao;
     
@@ -166,7 +269,7 @@ int main() {
         }
         
         if (opcao == 0) {
-            cout << "👋 Saindo..." << endl;
+            cout << "👋 Saindo do programa..." << endl;
             gerenciador.mostrar_estatisticas();
             break;
         }
@@ -177,10 +280,11 @@ int main() {
             gerenciador.abrir_texto(opcao);
         }
         else {
-            cout << "❌ Número inválido!" << endl;
+            cout << "❌ Número inválido! Use 1-100, -1 para simulação ou 0 para sair." << endl;
         }
         
     } while (true);
     
+    cout << "\nObrigado por usar o sistema! 📖" << endl;
     return 0;
 }
