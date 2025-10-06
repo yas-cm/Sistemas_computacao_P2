@@ -14,9 +14,14 @@ private:
     int capacidade;
     int hits;
     int misses;
+    bool modo_silencioso;  // ✅ NOVO: controla se mostra logs
 
 public:
-    CacheFIFO(int cap = 10) : capacidade(cap), hits(0), misses(0) {}
+    CacheFIFO(int cap = 10) : capacidade(cap), hits(0), misses(0), modo_silencioso(false) {}
+    
+    void set_modo_silencioso(bool silencioso) {  // ✅ NOVO método
+        modo_silencioso = silencioso;
+    }
     
     string buscar_texto(int id) override {
         for (const auto& item : cache) {
@@ -35,12 +40,16 @@ public:
         }
         
         if (cache.size() >= capacidade) {
-            cout << "🗑️  FIFO: Removendo texto " << cache[0].first << " (mais antigo)" << endl;
+            if (!modo_silencioso) {  // ✅ Só mostra se não estiver silencioso
+                cout << "🗑️  FIFO: Removendo texto " << cache[0].first << " (mais antigo)" << endl;
+            }
             cache.erase(cache.begin());
         }
         
         cache.push_back({id, conteudo});
-        cout << "💾 FIFO: Texto " << id << " armazenado (" << cache.size() << "/" << capacidade << ")" << endl;
+        if (!modo_silencioso) {  // ✅ Só mostra se não estiver silencioso
+            cout << "💾 FIFO: Texto " << id << " armazenado (" << cache.size() << "/" << capacidade << ")" << endl;
+        }
     }
 
     pair<int, int> get_estatisticas() const override {
@@ -57,7 +66,6 @@ public:
         misses = 0;
     }
 
-    // ✅ NOVO MÉTODO - ESPIAR CACHE
     vector<int> get_ids_cache() const override {
         vector<int> ids;
         for (const auto& item : cache) {

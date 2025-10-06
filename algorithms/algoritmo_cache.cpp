@@ -16,7 +16,8 @@ public:
     virtual pair<int, int> get_estatisticas() const = 0;
     virtual string get_nome() const = 0;
     virtual void limpar_cache() = 0;
-    virtual vector<int> get_ids_cache() const = 0;  // ✅ NOVO MÉTODO
+    virtual vector<int> get_ids_cache() const = 0;
+    virtual void set_modo_silencioso(bool silencioso) = 0;  // ✅ NOVO MÉTODO
 };
 
 #endif

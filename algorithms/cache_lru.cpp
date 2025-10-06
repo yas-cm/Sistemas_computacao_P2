@@ -16,9 +16,14 @@ private:
     int misses;
     list<pair<int, string>> cache_list;
     unordered_map<int, list<pair<int, string>>::iterator> cache_map;
+    bool modo_silencioso;  // ✅ NOVO: controla se mostra logs
 
 public:
-    CacheLRU(int cap = 10) : capacidade(cap), hits(0), misses(0) {}
+    CacheLRU(int cap = 10) : capacidade(cap), hits(0), misses(0), modo_silencioso(false) {}
+    
+    void set_modo_silencioso(bool silencioso) {  // ✅ NOVO método
+        modo_silencioso = silencioso;
+    }
     
     string buscar_texto(int id) override {
         auto it = cache_map.find(id);
@@ -41,14 +46,18 @@ public:
         
         if (cache_list.size() >= capacidade) {
             int id_remover = cache_list.front().first;
-            cout << "🗑️  LRU: Removendo texto " << id_remover << " (menos recentemente usado)" << endl;
+            if (!modo_silencioso) {  // ✅ Só mostra se não estiver silencioso
+                cout << "🗑️  LRU: Removendo texto " << id_remover << " (menos recentemente usado)" << endl;
+            }
             cache_map.erase(id_remover);
             cache_list.pop_front();
         }
         
         cache_list.push_back({id, conteudo});
         cache_map[id] = prev(cache_list.end());
-        cout << "💾 LRU: Texto " << id << " armazenado (" << cache_list.size() << "/" << capacidade << ")" << endl;
+        if (!modo_silencioso) {  // ✅ Só mostra se não estiver silencioso
+            cout << "💾 LRU: Texto " << id << " armazenado (" << cache_list.size() << "/" << capacidade << ")" << endl;
+        }
     }
 
     pair<int, int> get_estatisticas() const override {
@@ -66,7 +75,6 @@ public:
         misses = 0;
     }
 
-    // ✅ NOVO MÉTODO - ESPIAR CACHE
     vector<int> get_ids_cache() const override {
         vector<int> ids;
         for (const auto& item : cache_list) {

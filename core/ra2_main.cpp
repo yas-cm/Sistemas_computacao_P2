@@ -5,12 +5,14 @@
 #include <thread>
 #include <fstream>
 
-// ✅ INCLUIR APENAS A INTERFACE UMA VEZ
-#include "../algorithms/algoritmo_cache.cpp"
 // ✅ INCLUIR OS ALGORITMOS
+#include "../algorithms/algoritmo_cache.cpp"
 #include "../algorithms/cache_fifo.cpp"
 #include "../algorithms/cache_lru.cpp"
 #include "../algorithms/cache_mru.cpp"
+
+// ✅ INCLUIR SIMULADOR
+#include "../simulation/simulador.cpp"
 
 using namespace std;
 
@@ -21,14 +23,26 @@ private:
     AlgoritmoCache* algoritmo_cache;
     int hits;
     int misses;
+    string algoritmo_atual;
 
 public:
-    GerenciadorTextos() : algoritmo_cache(nullptr), hits(0), misses(0) {
+    GerenciadorTextos() : hits(0), misses(0), algoritmo_atual("FIFO") {
         carregar_lista_textos();
+        // ✅ INICIA SEMPRE COM FIFO (default)
+        algoritmo_cache = new CacheFIFO();
     }
 
-    void set_algoritmo_cache(AlgoritmoCache* algoritmo) {
+    ~GerenciadorTextos() {
+        delete algoritmo_cache;
+    }
+
+    void set_algoritmo_cache(AlgoritmoCache* algoritmo, const string& nome) {
+        delete algoritmo_cache;
         algoritmo_cache = algoritmo;
+        algoritmo_atual = nome;
+        hits = 0;
+        misses = 0;
+        cout << "🔄 Algoritmo trocado para: " << nome << endl;
     }
 
     void carregar_lista_textos() {
@@ -39,7 +53,7 @@ public:
     }
 
     string carregar_texto_disco(int id) {
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(100)); // Simula disco lento
         
         if (id >= 1 && id <= 100) {
             string caminho = caminhos_textos[id - 1];
@@ -59,7 +73,7 @@ public:
         return "❌ Texto não encontrado!";
     }
 
-    void mostrar_cache() {  // ✅ NOVO MÉTODO
+    void mostrar_cache() {
         if (algoritmo_cache) {
             vector<int> ids_cache = algoritmo_cache->get_ids_cache();
             cout << "🔍 CACHE ATUAL: [";
@@ -68,8 +82,6 @@ public:
                 if (i < ids_cache.size() - 1) cout << ", ";
             }
             cout << "] (" << ids_cache.size() << "/10)" << endl;
-        } else {
-            cout << "❌ Nenhum algoritmo de cache selecionado!" << endl;
         }
     }
 
@@ -106,7 +118,8 @@ public:
             }
         }
         
-        cout << "📄 Texto " << id << ":" << endl;
+        // Mostra apenas as primeiras linhas
+        cout << "📄 Texto " << id << " (primeiras linhas):" << endl;
         cout << "==========================================" << endl;
         
         size_t pos = 0;
@@ -129,63 +142,48 @@ public:
         if (cache_hit) cout << "🚀 Velocidade alta: cache!" << endl;
         else cout << "🐌 Velocidade baixa: disco" << endl;
 
-        mostrar_cache();  // ✅ MOSTRA CACHE APÓS CADA OPERAÇÃO
+        mostrar_cache();
     }
 
+    // ✅ SIMULAÇÃO CHAMANDO ARQUIVO SEPARADO
     void executar_modo_simulacao() {
-        cout << "\n🎮 MODO SIMULAÇÃO" << endl;
-        cout << "Aguardando Aluno D..." << endl;
+        Simulador simulador;
+        string algoritmo_vencedor = simulador.executar_simulacao();
+        
+        // ✅ TROCAR PARA ALGORITMO VENCEDOR
+        cout << "\n🔄 Trocando para algoritmo: " << algoritmo_vencedor << endl;
+        if (algoritmo_vencedor == "FIFO") {
+            set_algoritmo_cache(new CacheFIFO(), "FIFO");
+        } else if (algoritmo_vencedor == "LRU") {
+            set_algoritmo_cache(new CacheLRU(), "LRU");
+        } else if (algoritmo_vencedor == "MRU") {
+            set_algoritmo_cache(new CacheMRU(), "MRU");
+        }
+        
+        cout << "✅ Agora usando: " << algoritmo_atual << " (mais rápido)" << endl;
     }
 
     void mostrar_estatisticas() {
         if (algoritmo_cache) {
             auto stats = algoritmo_cache->get_estatisticas();
-            cout << "\n📊 ESTATÍSTICAS:" << endl;
-            cout << "Algoritmo: " << algoritmo_cache->get_nome() << endl;
+            cout << "\n📊 ESTATÍSTICAS ATUAIS:" << endl;
+            cout << "Algoritmo: " << algoritmo_atual << endl;
             cout << "Hits: " << hits << " | Misses: " << misses << endl;
             cout << "Taxa de acerto: " << (hits * 100.0 / max(1, hits + misses)) << "%" << endl;
-            mostrar_cache();  // ✅ MOSTRA CACHE NAS ESTATÍSTICAS
+            mostrar_cache();
         }
     }
 };
 
-// FUNÇÃO PRINCIPAL
+// FUNÇÃO PRINCIPAL SIMPLIFICADA
 int main() {
     cout << "📚 SISTEMA DE LEITURA - TEXTO É VIDA" << endl;
     cout << "====================================" << endl;
+    cout << "✅ Iniciando com algoritmo: FIFO (padrão)" << endl;
+    cout << "💡 Digite -1 para simulação e troca automática" << endl;
     
     GerenciadorTextos gerenciador;
     
-    cout << "\n🎯 Escolha o algoritmo:" << endl;
-    cout << "1 - FIFO (First-In, First-Out)" << endl;
-    cout << "2 - LRU (Least Recently Used)" << endl;
-    cout << "3 - MRU (Most Recently Used)" << endl;
-    cout << "Digite 1, 2 ou 3: ";
-    
-    int escolha;
-    cin >> escolha;
-    
-    if (escolha == 1) {
-        CacheFIFO* algoritmo = new CacheFIFO();
-        gerenciador.set_algoritmo_cache(algoritmo);
-        cout << "✅ " << algoritmo->get_nome() << " carregado!" << endl;
-    }
-    else if (escolha == 2) {
-        CacheLRU* algoritmo = new CacheLRU();
-        gerenciador.set_algoritmo_cache(algoritmo);
-        cout << "✅ " << algoritmo->get_nome() << " carregado!" << endl;
-    }
-    else if (escolha == 3) {
-        CacheMRU* algoritmo = new CacheMRU();
-        gerenciador.set_algoritmo_cache(algoritmo);
-        cout << "✅ " << algoritmo->get_nome() << " carregado!" << endl;
-    }
-    else {
-        cout << "❌ Escolha inválida! Usando FIFO." << endl;
-        CacheFIFO* algoritmo = new CacheFIFO();
-        gerenciador.set_algoritmo_cache(algoritmo);
-    }
-
     int opcao;
     do {
         cout << "\nDigite texto (1-100), -1 simulação, 0 sair: ";
@@ -195,9 +193,15 @@ int main() {
             gerenciador.mostrar_estatisticas();
             break;
         }
-        else if (opcao == -1) gerenciador.executar_modo_simulacao();
-        else if (opcao >= 1 && opcao <= 100) gerenciador.abrir_texto(opcao);
-        else cout << "❌ Número inválido!" << endl;
+        else if (opcao == -1) {
+            gerenciador.executar_modo_simulacao();
+        }
+        else if (opcao >= 1 && opcao <= 100) {
+            gerenciador.abrir_texto(opcao);
+        }
+        else {
+            cout << "❌ Número inválido!" << endl;
+        }
         
     } while (true);
     
