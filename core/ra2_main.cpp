@@ -150,8 +150,8 @@ public:
         Simulador simulador;
         string algoritmo_vencedor = simulador.executar_simulacao();
         
-        // ✅ TROCAR PARA ALGORITMO VENCEDOR
-        cout << "\n🔄 Trocando para algoritmo: " << algoritmo_vencedor << endl;
+        // Trocar para algoritmo vencedor - APENAS UMA VEZ
+        cout << "\nTrocando para algoritmo: " << algoritmo_vencedor << endl;
         if (algoritmo_vencedor == "FIFO") {
             set_algoritmo_cache(new CacheFIFO(), "FIFO");
         } else if (algoritmo_vencedor == "LRU") {
@@ -160,7 +160,7 @@ public:
             set_algoritmo_cache(new CacheMRU(), "MRU");
         }
         
-        cout << "✅ Agora usando: " << algoritmo_atual << " (mais rápido)" << endl;
+        cout << "Agora usando: " << algoritmo_atual << " (mais rapido)" << endl;
     }
 
     void mostrar_estatisticas() {

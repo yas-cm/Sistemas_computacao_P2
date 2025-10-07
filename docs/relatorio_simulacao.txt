@@ -1,0 +1,25 @@
+
+RELATORIO DE SIMULACAO - ALGORITMOS DE CACHE
+Data: 2025-10-06 22:29:58
+
+RESULTADOS:
+-----------
+Algoritmo  | Tempo Medio | Taxa de Hit | Cache Misses
+---------- | ----------- | ----------- | ------------
+FIFO      | 84.4        | 23.2        | 461         
+LRU       | 84.4        | 23.2        | 461         
+MRU       | 101.0       | 8.5         | 549         
+
+RECOMENDACAO:
+-------------
+Algoritmo escolhido: FIFO
+• Tempo medio: 84.4 ms
+• Taxa de cache hit: 23.2%
+• Total de cache misses: 461
+
+METODOLOGIA:
+------------
+• 3 usuarios simulados
+• 200 requisicoes por usuario
+• 3 padroes de acesso: Aleatorio, Poisson, Ponderado (30-40)
+• Cache com capacidade para 10 textos
