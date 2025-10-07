@@ -45,7 +45,7 @@ def gerar_grafico_unico():
     fig = plt.figure(figsize=(12, 8))
     
     # Definir grid: 2 linhas (80% graficos, 20% recomendacao) e 2 colunas
-    gs = plt.GridSpec(3, 2, height_ratios=[0.5, 3.5, 1])
+    gs = plt.GridSpec(2, 2, height_ratios=[4, 1])
     
     # Grafico 1: Tempo Medio (esquerda superior)
     ax1 = fig.add_subplot(gs[0, 0])
