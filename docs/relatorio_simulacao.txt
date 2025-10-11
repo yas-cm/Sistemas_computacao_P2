@@ -20,6 +20,6 @@ Algoritmo escolhido: 2Q
 METODOLOGIA:
 ------------
 • 3 usuarios simulados
-• 200 requisicoes por usuario
+• 300 requisicoes por usuario
 • 3 padroes de acesso: Aleatorio, Poisson, Ponderado (30-40)
 • Cache com capacidade para 10 textos
