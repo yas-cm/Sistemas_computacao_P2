@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np
 import json
-import os
 
 # ✅ CONFIGURAR FONTES COMPATÍVEIS ANTES DE QUALQUER OUTRO CÓDIGO
 plt.rcParams['font.family'] = 'DejaVu Sans'
