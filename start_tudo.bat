@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 echo.
-echo COMPILANDO PROJETO COMPLETO COM 2Q...
+echo COMPILANDO...
 echo.
 
 g++ -std=c++17 -O2 -o ra2_main.exe ra2_main.cpp

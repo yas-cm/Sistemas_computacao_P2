@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <fstream>
+#include <iomanip>
 #include "../algorithms/algoritmo_cache.cpp"
 #include "../algorithms/cache_fifo.cpp"
 #include "../algorithms/cache_lru.cpp"
@@ -50,33 +51,31 @@ public:
         random_device rd;
         mt19937 gen(rd());
         
-        // ✅ PADRÕES MISTURADOS ALEATORIAMENTE
         uniform_int_distribution<> dist_tipo(1, 3);
         uniform_int_distribution<> dist_aleatorio(1, 100);
-        uniform_int_distribution<> dist_media(15, 35); // Poisson variável
+        uniform_int_distribution<> dist_media(15, 35);
         uniform_real_distribution<> dist_prob(0.0, 1.0);
         uniform_int_distribution<> dist_30_40(30, 40);
         
-        // ✅ DECLARAR VARIÁVEIS FORA DO SWITCH
         int media_poisson;
-        poisson_distribution<> dist_poisson(20); // Valor inicial
+        poisson_distribution<> dist_poisson(20);
         
         for (int i = 0; i < 300; i++) {
             int tipo_padrao = dist_tipo(gen);
             int texto_id;
             
             switch(tipo_padrao) {
-                case 1: // (a) Aleatório puro e simples
+                case 1:
                     texto_id = dist_aleatorio(gen);
                     break;
                     
-                case 2: // (b) Aleatório com distribuição de Poisson
+                case 2:
                     media_poisson = dist_media(gen);
                     dist_poisson = poisson_distribution<>(media_poisson);
                     texto_id = min(max(dist_poisson(gen), 1), 100);
                     break;
                     
-                case 3: // (c) 43% de chance para textos 30-40
+                case 3:
                     if (dist_prob(gen) < 0.43) {
                         texto_id = dist_30_40(gen);
                     } else {
@@ -85,7 +84,7 @@ public:
                     break;
                     
                 default:
-                    texto_id = dist_aleatorio(gen); // Fallback
+                    texto_id = dist_aleatorio(gen);
                     break;
             }
             
@@ -121,6 +120,10 @@ public:
             
             for (int usuario = 1; usuario <= 3; usuario++) {
                 cout << "   👤 Usuario " << usuario << ": ";
+                
+                // ✅ LIMPAR CACHE AO MUDAR DE USUÁRIO
+                algoritmo->limpar_cache();
+                
                 vector<int> sequencia = gerar_sequencia_acessos_misturados();
                 
                 for (int texto_id : sequencia) {
@@ -156,42 +159,52 @@ public:
         return resultados;
     }
 
-    void salvar_resultados_para_grafico(const ResultadoSimulacao& resultados) {
-        ofstream arquivo("simulation/resultados_simulacao.txt");
+    void salvar_resultados_json(const ResultadoSimulacao& resultados) {
+        ofstream arquivo("docs/resultados.json");
         
         if (arquivo.is_open()) {
-            arquivo << "ALGORITMOS:";
-            for (const auto& algo : resultados.algoritmos) {
-                arquivo << " " << algo;
-            }
-            arquivo << "\n";
+            arquivo << "{\n";
             
-            arquivo << "TEMPO_MEDIO:";
-            for (double tempo : resultados.tempo_medio) {
-                arquivo << " " << tempo;
-            }
-            arquivo << "\n";
+            // Data da simulação
+            auto now = chrono::system_clock::now();
+            time_t now_time = chrono::system_clock::to_time_t(now);
+            char time_buffer[80];
+            strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", localtime(&now_time));
+            arquivo << "  \"data_simulacao\": \"" << time_buffer << "\",\n";
             
-            arquivo << "TAXA_HIT:";
-            for (double taxa : resultados.taxa_hit) {
-                arquivo << " " << taxa;
+            // Resultados dos algoritmos
+            arquivo << "  \"resultados\": [\n";
+            for (size_t i = 0; i < resultados.algoritmos.size(); i++) {
+                arquivo << "    {\n";
+                arquivo << "      \"algoritmo\": \"" << resultados.algoritmos[i] << "\",\n";
+                arquivo << "      \"tempo_medio\": " << fixed << setprecision(2) << resultados.tempo_medio[i] << ",\n";
+                arquivo << "      \"taxa_hit\": " << fixed << setprecision(2) << resultados.taxa_hit[i] << ",\n";
+                arquivo << "      \"cache_misses\": " << resultados.total_misses[i] << ",\n";
+                arquivo << "      \"total_hits\": " << resultados.total_hits[i] << "\n";
+                arquivo << "    }";
+                if (i < resultados.algoritmos.size() - 1) arquivo << ",";
+                arquivo << "\n";
             }
-            arquivo << "\n";
+            arquivo << "  ],\n";
             
-            arquivo << "TOTAL_MISSES:";
-            for (int misses : resultados.total_misses) {
-                arquivo << " " << misses;
-            }
-            arquivo << "\n";
+            // Informações gerais
+            arquivo << "  \"info_geral\": {\n";
+            arquivo << "    \"total_testes\": 900,\n";
+            arquivo << "    \"tamanho_cache\": 10,\n";
+            arquivo << "    \"algoritmos_testados\": " << resultados.algoritmos.size() << ",\n";
+            arquivo << "    \"metodos_acesso\": [\"Uniforme\", \"Poisson\", \"Ponderado\"]\n";
+            arquivo << "  }\n";
             
+            arquivo << "}";
             arquivo.close();
-            cout << "💾 Dados salvos em: simulation/resultados_simulacao.txt" << endl;
+            
+            cout << "Resultados salvos em: docs/resultados.json" << endl;
         }
     }
 
     string executar_simulacao() {
         ResultadoSimulacao resultados = executar_simulacao_completa();
-        salvar_resultados_para_grafico(resultados);
+        salvar_resultados_json(resultados); 
         
         string algoritmo_vencedor = resultados.algoritmos[0];
         double melhor_taxa = resultados.taxa_hit[0];
@@ -203,10 +216,10 @@ public:
             }
         }
         
-        cout << "\n🏆 ALGORITMO VENCEDOR: " << algoritmo_vencedor << " (" << melhor_taxa << "% hits)" << endl;
-        cout << "📈 Gerando graficos e relatorios..." << endl;
+        cout << "\nALGORITMO VENCEDOR: " << algoritmo_vencedor << " (" << melhor_taxa << "% hits)" << endl;
+        cout << "Executando dashboard com dados reais..." << endl;
         
-        system("python simulation/gerador_graficos.py");
+        system("python simulation/dashboard_cache.py");
         
         return algoritmo_vencedor;
     }
