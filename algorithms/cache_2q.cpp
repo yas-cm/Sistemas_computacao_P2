@@ -11,70 +11,62 @@ using namespace std;
 
 class Cache2Q : public AlgoritmoCache {
 private:
-    int capacidade;
-    int hits;
-    int misses;
-    bool modo_silencioso;
+    int capacidade; // Capacidade máxima do cache
+    int hits; // Contador de acertos
+    int misses; // Contador de falhas
+    bool modo_silencioso; // Controla se mensagens de log são exibidas
     
-    // ✅ ESTRUTURA OTIMIZADA: unordered_map + 2 queues
-    list<int> fifo_queue;          // Itens novos (1º acesso)
-    list<int> lru_queue;           // Itens frequentes (2+ acessos)
-    unordered_map<int, string> cache_data;  // Dados dos textos
+    list<int> fifo_queue; // Fila FIFO para itens recém-adicionados
+    list<int> lru_queue; // Fila LRU para itens acessados mais de uma vez
+    unordered_map<int, string> cache_data; // Armazena os dados do cache
     
-    // Mapas para acesso O(1) às posições nas listas
-    unordered_map<int, list<int>::iterator> fifo_positions;
-    unordered_map<int, list<int>::iterator> lru_positions;
+    unordered_map<int, list<int>::iterator> fifo_positions; // Mapeia posições na FIFO
+    unordered_map<int, list<int>::iterator> lru_positions; // Mapeia posições na LRU
 
 public:
     Cache2Q(int cap = 10) : capacidade(cap), hits(0), misses(0), modo_silencioso(false) {}
     
     void set_modo_silencioso(bool silencioso) override {
-        modo_silencioso = silencioso;
+        modo_silencioso = silencioso; // Ativa/desativa logs
     }
     
     string buscar_texto(int id) override {
         auto it = cache_data.find(id);
         if (it != cache_data.end()) {
-            // ✅ ACESSO O(1) - Verifica em qual fila está
             if (fifo_positions.find(id) != fifo_positions.end()) {
-                // Está na FIFO - PROMOVER para LRU
-                fifo_queue.erase(fifo_positions[id]);
+                fifo_queue.erase(fifo_positions[id]); // Remove da FIFO
                 fifo_positions.erase(id);
-                
-                lru_queue.push_back(id);
+
+                lru_queue.push_back(id); // Promove para LRU
                 lru_positions[id] = prev(lru_queue.end());
-                
+
                 if (!modo_silencioso) {
                     cout << "🔄 2Q: Texto " << id << " promovido FIFO → LRU" << endl;
                 }
             } else if (lru_positions.find(id) != lru_positions.end()) {
-                // Já está na LRU - mover para o final (mais recente)
-                lru_queue.erase(lru_positions[id]);
+                lru_queue.erase(lru_positions[id]); // Atualiza posição na LRU
                 lru_queue.push_back(id);
                 lru_positions[id] = prev(lru_queue.end());
             }
             
-            hits++;
+            hits++; // Incrementa acertos
             return it->second;
         }
-        misses++;
+        misses++; // Incrementa falhas
         return "";
     }
 
     void carregar_texto(int id, const string& conteudo) override {
-        // Se já está no cache, apenas atualizar
         if (cache_data.find(id) != cache_data.end()) {
-            cache_data[id] = conteudo;
+            cache_data[id] = conteudo; // Atualiza conteúdo existente
             return;
         }
-        
-        // Verificar se precisa remover algo
+
         if (cache_data.size() >= capacidade) {
-            remover_pagina();
+            remover_pagina(); // Remove página se cache cheio
         }
-        
-        // Nova página vai para FIFO
-        fifo_queue.push_back(id);
+
+        fifo_queue.push_back(id); // Adiciona à FIFO
         fifo_positions[id] = prev(fifo_queue.end());
         cache_data[id] = conteudo;
         
@@ -86,10 +78,9 @@ public:
 
 private:
     void remover_pagina() {
-        // Prioridade 1: Remover da FIFO se não estiver vazia
         if (!fifo_queue.empty()) {
             int id_remover = fifo_queue.front();
-            fifo_queue.pop_front();
+            fifo_queue.pop_front(); // Remove da FIFO
             fifo_positions.erase(id_remover);
             cache_data.erase(id_remover);
             
@@ -97,10 +88,9 @@ private:
                 cout << "🗑️  2Q: Removendo texto " << id_remover << " da FIFO" << endl;
             }
         } 
-        // Prioridade 2: Remover da LRU (menos recentemente usado)
         else if (!lru_queue.empty()) {
             int id_remover = lru_queue.front();
-            lru_queue.pop_front();
+            lru_queue.pop_front(); // Remove da LRU
             lru_positions.erase(id_remover);
             cache_data.erase(id_remover);
             
@@ -112,34 +102,32 @@ private:
 
 public:
     pair<int, int> get_estatisticas() const override {
-        return {hits, misses};
+        return {hits, misses}; // Retorna estatísticas de uso
     }
 
     string get_nome() const override {
-        return "2Q (Two Queues)";
+        return "2Q (Two Queues)"; // Nome do algoritmo
     }
 
     void limpar_cache() override {
-        fifo_queue.clear();
-        lru_queue.clear();
+        fifo_queue.clear(); // Limpa FIFO
+        lru_queue.clear(); // Limpa LRU
         fifo_positions.clear();
         lru_positions.clear();
         cache_data.clear();
         hits = 0;
-        misses = 0;
+        misses = 0; // Reseta estatísticas
     }
 
     vector<int> get_ids_cache() const override {
         vector<int> ids;
-        
-        // Adicionar IDs da FIFO (mais antigos primeiro)
+
         for (int id : fifo_queue) {
-            ids.push_back(id);
+            ids.push_back(id); // Adiciona IDs da FIFO
         }
         
-        // Adicionar IDs da LRU (mais antigos primeiro)
         for (int id : lru_queue) {
-            ids.push_back(id);
+            ids.push_back(id); // Adiciona IDs da LRU
         }
         
         return ids;

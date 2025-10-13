@@ -11,13 +11,12 @@ using namespace std;
 
 class CacheFIFO : public AlgoritmoCache {
 private:
-    int capacidade;
-    int hits;
-    int misses;
-    bool modo_silencioso;
-    // ✅ ESTRUTURA OTIMIZADA: unordered_map + queue
-    list<int> fifo_queue;
-    unordered_map<int, string> cache_data;
+    int capacidade; // Tamanho máximo do cache
+    int hits; // Contador de acertos
+    int misses; // Contador de falhas
+    bool modo_silencioso; // Controla logs de saída
+    list<int> fifo_queue; // Fila FIFO para gerenciar a ordem de inserção
+    unordered_map<int, string> cache_data; // Armazena os dados do cache
 
 public:
     CacheFIFO(int cap = 10) : capacidade(cap), hits(0), misses(0), modo_silencioso(false) {}
@@ -27,61 +26,58 @@ public:
     }
     
     string buscar_texto(int id) override {
-        auto it = cache_data.find(id); // ✅ BUSCA O(1)
+        auto it = cache_data.find(id); // Verifica se o texto está no cache
         if (it != cache_data.end()) {
             hits++;
-            return it->second;
+            return it->second; // Retorna o conteúdo se encontrado
         }
         misses++;
-        return "";
+        return ""; // Retorna vazio se não encontrado
     }
 
     void carregar_texto(int id, const string& conteudo) override {
-        // Se já está no cache, apenas atualizar conteúdo
         if (cache_data.find(id) != cache_data.end()) {
-            cache_data[id] = conteudo;
+            cache_data[id] = conteudo; // Atualiza o conteúdo existente
             return;
         }
         
-        // Se cache cheio, remover o mais antigo
         if (fifo_queue.size() >= capacidade) {
-            int id_remover = fifo_queue.front();
+            int id_remover = fifo_queue.front(); // Remove o mais antigo
             fifo_queue.pop_front();
             cache_data.erase(id_remover);
             
             if (!modo_silencioso) {
-                cout << "🗑️  FIFO: Removendo texto " << id_remover << " (mais antigo)" << endl;
+                cout << "🗑️  FIFO: Removendo texto " << id_remover << endl;
             }
         }
         
-        // Adicionar novo texto
-        fifo_queue.push_back(id);
+        fifo_queue.push_back(id); // Adiciona o novo texto
         cache_data[id] = conteudo;
         
         if (!modo_silencioso) {
-            cout << "💾 FIFO: Texto " << id << " armazenado (" << fifo_queue.size() << "/" << capacidade << ")" << endl;
+            cout << "💾 FIFO: Texto " << id << " armazenado" << endl;
         }
     }
 
     pair<int, int> get_estatisticas() const override {
-        return {hits, misses};
+        return {hits, misses}; // Retorna hits e misses
     }
 
     string get_nome() const override {
-        return "FIFO (First-In, First-Out)";
+        return "FIFO (First-In, First-Out)"; // Nome do algoritmo
     }
 
     void limpar_cache() override {
-        fifo_queue.clear();
-        cache_data.clear();
+        fifo_queue.clear(); // Limpa a fila FIFO
+        cache_data.clear(); // Limpa os dados do cache
         hits = 0;
-        misses = 0;
+        misses = 0; // Reseta as estatísticas
     }
 
     vector<int> get_ids_cache() const override {
         vector<int> ids;
         for (int id : fifo_queue) {
-            ids.push_back(id);
+            ids.push_back(id); // Adiciona os IDs da FIFO
         }
         return ids;
     }

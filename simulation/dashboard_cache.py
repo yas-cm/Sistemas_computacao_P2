@@ -3,12 +3,10 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import json
 
-# ✅ CONFIGURAR FONTES COMPATÍVEIS ANTES DE QUALQUER OUTRO CÓDIGO
 plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 
-# Configurações de cores
 CORES = {
     'fundo_radial': ['#0d002a', '#1a0563'],
     'card': '#4a3b83',
@@ -79,14 +77,12 @@ def processar_dados(dados):
     """Processa os dados do JSON para o dashboard"""
     resultados = dados['resultados']
     
-    # Extrair dados básicos
     algoritmos = [r['algoritmo'] for r in resultados]
     tempo_medio = [r['tempo_medio'] for r in resultados]
     taxa_hit = [r['taxa_hit'] for r in resultados]
     cache_misses = [r['cache_misses'] for r in resultados]
     total_hits = [r['total_hits'] for r in resultados]
-    
-    # Encontrar melhor algoritmo (maior taxa de hit)
+
     melhor_idx = taxa_hit.index(max(taxa_hit))
     pior_taxa = min(taxa_hit)
     eficiencia = ((taxa_hit[melhor_idx] - pior_taxa) / pior_taxa) * 100
@@ -99,7 +95,6 @@ def processar_dados(dados):
         "eficiencia": f"+{eficiencia:.0f}%"
     }
     
-    # Gerar rankings
     indices_hit = sorted(range(len(taxa_hit)), key=lambda i: taxa_hit[i], reverse=True)
     ranking_hit = [algoritmos[i] for i in indices_hit]
     
@@ -153,15 +148,11 @@ def criar_dashboard(dados_processados):
     ranking = dados_processados['ranking']
     info_geral = dados_processados['info_geral']
     
-    # ✅ CORRIGIDO: Usar GridSpec sem tight_layout problemático
     fig = plt.figure(figsize=(16, 9), facecolor=CORES['fundo_radial'][0])
     
-    # ✅ CORRIGIDO: Layout manual em vez de tight_layout
     fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.93, 
                        wspace=0.15, hspace=0.08)
     
-
-    # Fundo gradiente
     ax_bg = fig.add_axes([0, 0, 1, 1], facecolor='none')
     x = np.linspace(0, 1, 100)
     y = np.linspace(0, 1, 100)
@@ -170,8 +161,6 @@ def criar_dashboard(dados_processados):
     ax_bg.imshow(Z, extent=[0, 1, 0, 1], aspect='auto', cmap=plt.cm.Purples, alpha=0.3)
     ax_bg.axis('off')
 
-    # ✅ CORRIGIDO: Grid mais simples e compatível
-    # Header
     ax_header = fig.add_axes([0.05, 0.88, 0.90, 0.08])
     criar_card(ax_header)
     ax_header.text(0.5, 0.7, f"RELATORIO DE PERFORMANCE - {recomendacao['algoritmo']} VENCEDOR", 
@@ -179,7 +168,6 @@ def criar_dashboard(dados_processados):
     ax_header.text(0.5, 0.3, f"Simulacao: {dados_processados['data_simulacao']}", 
                    ha='center', va='center', color=CORES['texto'], fontsize=10)
 
-    # Melhor Algoritmo - ✅ CORRIGIDO: Substituir emojis por texto
     ax_melhor_algo = fig.add_axes([0.05, 0.63, 0.25, 0.23])
     criar_card(ax_melhor_algo)
     ax_melhor_algo.text(0.5, 0.5, 
@@ -190,7 +178,6 @@ def criar_dashboard(dados_processados):
         f"* Eficiencia: {recomendacao['eficiencia']}",
         fontsize=13, ha='center', va='center', color=CORES['texto'], weight='bold', zorder=1)
 
-    # Info Geral - ✅ CORRIGIDO: Substituir emojis por texto
     ax_info_geral = fig.add_axes([0.05, 0.35, 0.25, 0.23])
     criar_card(ax_info_geral)
     ax_info_geral.text(0.5, 0.5,
@@ -204,7 +191,6 @@ def criar_dashboard(dados_processados):
         f"  - {info_geral['metodos_acesso'][2]}",
         fontsize=11, ha='center', va='center', color=CORES['texto'], zorder=1)
 
-    # Gráfico de Linha - Tempo
     ax_chart_main = fig.add_axes([0.33, 0.35, 0.40, 0.51])
     criar_card(ax_chart_main)
     ax_chart_main.axis('on')
@@ -217,7 +203,6 @@ def criar_dashboard(dados_processados):
     ax_chart_main.grid(True, linestyle='--', alpha=0.3, color=CORES['texto'])
     ax_chart_main.set_facecolor(CORES['card'])
     
-    # Gráfico de Barras - Hit Rate
     ax_chart_bar = fig.add_axes([0.75, 0.63, 0.20, 0.23])
     criar_card(ax_chart_bar, 'Taxa de Hit (%)')
     ax_chart_bar.axis('on')
@@ -231,7 +216,6 @@ def criar_dashboard(dados_processados):
                          fontsize=9, color=CORES['texto'], weight='bold')
     ax_chart_bar.set_facecolor(CORES['card'])
 
-    # Gráfico de Pizza - Cache Misses
     ax_chart_pie = fig.add_axes([0.75, 0.35, 0.20, 0.23])
     criar_card(ax_chart_pie)
     ax_chart_pie.axis('on')
@@ -245,7 +229,6 @@ def criar_dashboard(dados_processados):
         autotext.set_color('white')
         autotext.set_weight('bold')
 
-    # Tabela de Performance
     ax_tabela1 = fig.add_axes([0.05, 0.05, 0.55, 0.25])
     criar_card(ax_tabela1)
     ax_tabela1.text(0.5, 0.92, 'Detalhes de Performance', fontsize=11, ha='center', 
@@ -275,7 +258,6 @@ def criar_dashboard(dados_processados):
         cell.set_edgecolor(CORES['borda'])
         cell.set_height(0.15)
 
-    # Tabela de Rankings
     ax_tabela2 = fig.add_axes([0.63, 0.05, 0.32, 0.25])
     criar_card(ax_tabela2)
     ax_tabela2.text(0.5, 0.92, 'Rankings Comparativos', fontsize=11, ha='center', 
@@ -291,33 +273,28 @@ def criar_dashboard(dados_processados):
         cell.set_edgecolor(CORES['borda'])
         cell.set_height(0.15)
 
-    # ✅ CORRIGIDO: Não usar tight_layout()
     print("Dashboard gerado com sucesso!")
-    plt.show()  # <-- Adicione esta linha
+    plt.show()  
 
 def main():
     """Função principal"""
     print("INICIANDO DASHBOARD DE ANALISE DE CACHE...")
     print("=" * 50)
     
-    # Carregar dados
     dados, sucesso = carregar_dados_simulacao()
     
     if not sucesso:
         print("NAO FOI POSSIVEL CARREGAR OS DADOS DA SIMULACAO.")
         return
     
-    # Processar dados
     dados_processados = processar_dados(dados)
     
-    # Exibir resumo no console - ✅ CORRIGIDO: Sem emojis
     print(f"\nALGORITMO VENCEDOR: {dados_processados['recomendacao']['algoritmo']}")
     print(f"Hit Rate: {dados_processados['recomendacao']['taxa_hit']:.1f}%")
     print(f"Eficiencia: {dados_processados['recomendacao']['eficiencia']}")
     print(f"Tempo Medio: {dados_processados['recomendacao']['tempo_medio']:.1f}ms")
     print(f"Total de Testes: {dados_processados['info_geral']['total_testes']}")
     
-    # Criar dashboard
     print("\nGERANDO DASHBOARD VISUAL...")
     criar_dashboard(dados_processados)
     

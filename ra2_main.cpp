@@ -5,7 +5,6 @@
 #include <thread>
 #include <fstream>
 
-// ✅ INCLUIR DIRETO OS ARQUIVOS
 #include "algorithms/algoritmo_cache.cpp"
 #include "algorithms/cache_fifo.cpp"
 #include "algorithms/cache_lru.cpp"
@@ -14,39 +13,38 @@
 
 using namespace std;
 
-// ✅ GERENCIADOR AQUI MESMO (no mesmo arquivo)
 class GerenciadorTextos {
 private:
-    vector<string> caminhos_textos;
-    AlgoritmoCache* algoritmo_cache;
-    string algoritmo_atual;
+    vector<string> caminhos_textos; // Lista de caminhos para os textos
+    AlgoritmoCache* algoritmo_cache; // Ponteiro para o algoritmo de cache atual
+    string algoritmo_atual; // Nome do algoritmo de cache em uso
 
 public:
     GerenciadorTextos() : algoritmo_atual("FIFO") {
-        carregar_lista_textos();
-        algoritmo_cache = new CacheFIFO();
+        carregar_lista_textos(); // Inicializa a lista de caminhos
+        algoritmo_cache = new CacheFIFO(); // Define FIFO como padrão
     }
 
     ~GerenciadorTextos() {
-        delete algoritmo_cache;
+        delete algoritmo_cache; // Libera memória do algoritmo atual
     }
 
     void set_algoritmo_cache(AlgoritmoCache* algoritmo, const string& nome) {
-        delete algoritmo_cache;
+        delete algoritmo_cache; // Substitui o algoritmo atual
         algoritmo_cache = algoritmo;
         algoritmo_atual = nome;
         cout << "Algoritmo trocado para: " << nome << endl;
     }
 
     void carregar_lista_textos() {
-        caminhos_textos.resize(100);
+        caminhos_textos.resize(100); // Inicializa lista com 100 textos
         for (int i = 0; i < 100; i++) {
             caminhos_textos[i] = "texts/" + to_string(i + 1) + ".txt";
         }
     }
 
     string carregar_texto_disco(int id) {
-        this_thread::sleep_for(chrono::milliseconds(100));
+        this_thread::sleep_for(chrono::milliseconds(100)); // Simula atraso de leitura
         
         if (id >= 1 && id <= 100) {
             string caminho = caminhos_textos[id - 1];
@@ -56,7 +54,7 @@ public:
                 string conteudo;
                 string linha;
                 while (getline(arquivo, linha)) {
-                    conteudo += linha + "\n";
+                    conteudo += linha + "\n"; // Concatena linhas do arquivo
                 }
                 arquivo.close();
                 return conteudo.empty() ? "Arquivo vazio!" : conteudo;
@@ -68,7 +66,7 @@ public:
 
     void mostrar_cache() {
         if (algoritmo_cache) {
-            vector<int> ids_cache = algoritmo_cache->get_ids_cache();
+            vector<int> ids_cache = algoritmo_cache->get_ids_cache(); // Obtém IDs no cache
             cout << "CACHE ATUAL: [";
             for (size_t i = 0; i < ids_cache.size(); i++) {
                 cout << ids_cache[i];
@@ -79,7 +77,7 @@ public:
     }
 
     void abrir_texto(int id) {
-        auto inicio = chrono::steady_clock::now();
+        auto inicio = chrono::steady_clock::now(); // Marca início da operação
         
         if (id < 1 || id > 100) {
             cout << "ID invalido!" << endl;
@@ -90,7 +88,7 @@ public:
         bool cache_hit = false;
 
         if (algoritmo_cache) {
-            conteudo = algoritmo_cache->buscar_texto(id);
+            conteudo = algoritmo_cache->buscar_texto(id); // Tenta buscar no cache
             if (!conteudo.empty()) {
                 cache_hit = true;
                 cout << "[CACHE HIT] Texto " << id << " do cache!" << endl;
@@ -102,14 +100,13 @@ public:
             string conteudo_disco = carregar_texto_disco(id);
             
             if (algoritmo_cache) {
-                algoritmo_cache->carregar_texto(id, conteudo_disco);
+                algoritmo_cache->carregar_texto(id, conteudo_disco); // Carrega no cache
                 conteudo = algoritmo_cache->buscar_texto(id);
             } else {
                 conteudo = conteudo_disco;
             }
         }
         
-        // Mostra apenas as primeiras linhas
         cout << "Texto " << id << " (primeiras linhas):" << endl;
         cout << "==========================================" << endl;
         
@@ -118,7 +115,7 @@ public:
         while (pos < conteudo.length() && linhas_mostradas < 3) {
             size_t newline = conteudo.find('\n', pos);
             if (newline == string::npos) break;
-            cout << conteudo.substr(pos, newline - pos) << endl;
+            cout << conteudo.substr(pos, newline - pos) << endl; // Mostra até 3 linhas
             pos = newline + 1;
             linhas_mostradas++;
         }
@@ -126,7 +123,7 @@ public:
         
         cout << "==========================================" << endl;
 
-        auto fim = chrono::steady_clock::now();
+        auto fim = chrono::steady_clock::now(); // Marca fim da operação
         auto duracao = chrono::duration_cast<chrono::milliseconds>(fim - inicio);
         cout << "Tempo: " << duracao.count() << "ms" << endl;
         
@@ -138,7 +135,7 @@ public:
 
     void executar_modo_simulacao() {
         Simulador simulador;
-        string algoritmo_vencedor = simulador.executar_simulacao();
+        string algoritmo_vencedor = simulador.executar_simulacao(); // Executa simulação
         
         cout << "\nTrocando para algoritmo: " << algoritmo_vencedor << endl;
         if (algoritmo_vencedor == "FIFO") {
@@ -167,7 +164,6 @@ public:
     }
 };
 
-// ✅ MAIN FORA DO CORE
 int main() {
     cout << "SISTEMA DE LEITURA - TEXTO E VIDA" << endl;
     cout << "====================================" << endl;
