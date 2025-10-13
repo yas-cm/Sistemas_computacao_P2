@@ -2,7 +2,7 @@
 
 ## 📋 Descrição do Projeto
 
-Sistema desenvolvido para a empresa Texto é Vida que implementa algoritmos de cache para otimizar o tempo de carregamento de textos em um sistema de discos forense lento. Gerencia 100 textos com mais de 1000 palavras cada, utilizando os algoritmos de substituição de cache: **FIFO**, **LRU** e **2Q**.
+Sistema desenvolvido para a empresa Texto é Vida que implementa algoritmos de cache para otimizar o tempo de carregamento de textos em um sistema de discos forense lento. Gerencia 100 textos com no mínimo  1000 palavras cada, utilizando os algoritmos de substituição de cache: **FIFO**, **LRU** ou **2Q**, ele possui uma maneira de determinar o mais rápido entre eles, fazendo uma simulação para elencar o melhor.
 
 ## 🏗️ Arquitetura do Projeto
 
