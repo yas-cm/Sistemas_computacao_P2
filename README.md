@@ -10,22 +10,20 @@ Sistema desenvolvido para a empresa Texto é Vida que implementa algoritmos de c
 
 ```bash
 GRUPO3_RA2/
-├── algorithms/
+├── algorithms/                          # Implementação dos algoritmos de cache
 │   ├── algoritmo_cache.cpp
 │   ├── cache_fifo.cpp
 │   ├── cache_lru.cpp
 │   └── cache_2q.cpp
 ├── core/
-├── simulation/
+├── simulation/                          # Módulo de simulação
 │   ├── simulador.cpp
 │   └── dashboard_cache.py
-├── texts/
+├── texts/                               # Os 100 arquivos de texto
 │   ├── 1.txt a 100.txt
-├── docs/
-│   ├── resultados.json
-│   └── relatorio_simulacao.txt
-├── start_tudo.bat
-├── ra2_main.cpp
+├── docs/                                # Onde será armazenado o resultado em JSON
+├── start_tudo.bat                       # Inicializador do programa
+├── ra2_main.cpp                         # Arquivo principal do projeto
 └── README.md
 ```
 
